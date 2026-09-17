@@ -10,6 +10,22 @@ app.get('/', (req, res) => {
   res.json({ message: 'Welcome to the Orders API' });
 });
 
+// Liveness probe (shallow: returns 200 if the process is up)
+app.get('/health', (req, res) => {
+  res.status(200).send('OK');
+});
+
+// Readiness probe (deep: verifies the DB connection)
+app.get('/ready', async (req, res) => {
+  try {
+    await db.query('SELECT 1');
+    res.status(200).send('READY');
+  } catch (err) {
+    console.error('Readiness check failed:', err.message);
+    res.status(503).send('NOT READY');
+  }
+});
+
 app.get('/orders', async (req, res) => {
   try {
     const result = await db.query('SELECT * FROM orders ORDER BY id DESC');
